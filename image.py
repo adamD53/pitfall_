@@ -8,6 +8,6 @@ class Image:
 
     def get_surface(self) -> pygame.Surface:
         return self.image_surface
-    
+   
     def get_image_pos(self) -> pygame.Vector2:
         return self.pos
