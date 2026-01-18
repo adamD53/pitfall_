@@ -9,6 +9,7 @@ class Player(Image):
         self.walking_animation_textures: list[pygame.Surface] = []
         self.flipped_walking_animation_textures: list[pygame.Surface] = []
         self.idle_image = self.get_surface();
+        self.flipped_idle_image = pygame.transform.flip(self.idle_image, True, False)
         self.timer = 0
         self.current_animation_frame_index = 0
         self.load_walking_animation_textures()
@@ -45,7 +46,7 @@ class Player(Image):
         # if keys[pygame.K_s]:
         #     self.pos.y += 300 * dt
         
-        self.image_surface = self.idle_image if self.facing_right else pygame.transform.flip(self.idle_image, True, False)
+        self.image_surface = self.idle_image if self.facing_right else self.flipped_idle_image
 
         if keys[pygame.K_a]:
             if self.facing_right:
