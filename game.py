@@ -12,8 +12,7 @@ class GameState(Enum):
 
 class Game:
     BUTTON_PLAY_INDEX = 0
-    BUTTON_STORE_INDEX = 1
-    BUTTON_QUIT_INDEX = 2
+    BUTTON_QUIT_INDEX = 1
 
     def __init__(self) -> None:
         pygame.init()
@@ -26,14 +25,19 @@ class Game:
         self.game_state = GameState.MENU 
         
         self.images: list[Image] = []
+        self.barrels: list[Barrel] = []
         self.buttons: list[Button] = [] 
         
         self.dt = 0
         
         self.load_images()
         self.load_buttons()
+        self.play_music("metallica.wav")
         
-        self.player = Player(500, self.floor.get_image_pos().y - 55)
+        floor_y_pos = self.floor.get_image_pos()[1]
+        self.player = Player(50, floor_y_pos - 100, floor_y_pos)
+
+        self.spawn_barrel()
 
     def load_images(self) -> None:
         background_path = os.path.join("Sprites", "Background.png")
@@ -45,40 +49,32 @@ class Game:
         self.images.append(self.background)
         self.images.append(self.floor)
 
-        barrel = Barrel(500, self.floor.get_image_pos().y)
-        self.images.append(barrel)
+    def spawn_barrel(self):
+        barrel_y = self.floor.get_image_pos()[1] - 55
+        barrel_x = self.screen_width + 50 
+        barrel = Barrel(barrel_x, barrel_y)
+        self.barrels.append(barrel)
     
     def load_buttons(self) -> None:
         center_x = self.screen_width // 2
         path_prefix = os.path.join("Sprites", "Menu")
         
-        # 1. Przycisk PLAY
         btn_play = Button(
             x=center_x - 100,
-            y=200, 
+            y=300, 
             normal_path=os.path.join(path_prefix, "Play.png"),
             selected_path=os.path.join(path_prefix, "Play-Selected.png")
         )
-        
-        # 2. Przycisk STORE
-        btn_store = Button(
-            x=center_x - 100, 
-            y=350, 
-            normal_path=os.path.join(path_prefix, "Store.png"),
-            selected_path=os.path.join(path_prefix, "Store-Selected.png")
-        )
 
-        # 3. Przycisk QUIT
         btn_quit = Button(
             x=center_x - 100, 
-            y=500, 
+            y=400, 
             normal_path=os.path.join(path_prefix, "Quit.png"),
             selected_path=os.path.join(path_prefix, "Quit-Selected.png")
         )
 
-        self.buttons.append(btn_play)   # Index 0
-        self.buttons.append(btn_store)  # Index 1
-        self.buttons.append(btn_quit)   # Index 2
+        self.buttons.append(btn_play)   
+        self.buttons.append(btn_quit)   
    
     def on_draw(self) -> None:
         self.screen.fill((0, 0, 0)) 
@@ -86,6 +82,10 @@ class Game:
         if self.game_state == GameState.GAME:
             for image in self.images:
                 self.screen.blit(image.get_surface(), image.get_image_pos())
+            
+            for barrel in self.barrels:
+                barrel.draw(self.screen)
+
             self.player.draw(self.screen)
         
         elif self.game_state == GameState.MENU:
@@ -99,18 +99,41 @@ class Game:
     def handle_input(self) -> None:
        if self.game_state == GameState.GAME:
             keys = pygame.key.get_pressed()
-            self.player.update(self.dt);
+            
+            self.player.speed = 300 
+            player_rect = self.player.rect
+
+
+            for barrel in self.barrels:
+
+                barrel.update(self.dt)
+
+ 
+                if player_rect.colliderect(barrel.rect):
+                    self.player.speed = 100
+                
+
+
+                if barrel.pos.x < -100:
+
+                    barrel.pos.x = self.screen_width + 50
+
+
+            self.player.update(self.dt)
+            
             if keys[pygame.K_ESCAPE]:
-                self.game_state = GameState.MENU; 
+                self.game_state = GameState.MENU
+                self.play_music("metallica.wav")
     
-    def load_music(self) -> None:
-        music_path = os.path.join("Sounds","background.wav")
+    def play_music(self, filename: str) -> None:
+        music_path = os.path.join("Sounds", filename)
         try:
+            pygame.mixer.music.unload() 
             pygame.mixer.music.load(music_path)
             pygame.mixer.music.set_volume(0.5)
-            pygame.mixer.music.play(-1)
+            pygame.mixer.music.play(-1) 
         except pygame.error as e:
-            print(f"Background music failed to load: {e}")
+            print(f"Nie udało się wczytać muzyki {filename}: {e}")
 
     def run(self) -> None:
         running = True
@@ -119,21 +142,15 @@ class Game:
                 if event.type == pygame.QUIT:
                     running = False
                 if self.game_state == GameState.MENU:
-                    # PLAY - Button index 0
                     if self.buttons[self.BUTTON_PLAY_INDEX].is_clicked(event):
+                        
                         self.game_state = GameState.GAME
+                        self.play_music("background.wav")
                     
-                    # STORE - Button index 1
-                    elif self.buttons[self.BUTTON_STORE_INDEX].is_clicked(event):
-                        print("Otwieram sklep... (tu dodaj logikę sklepu)")
-                    
-                    # QUIT - Button index 2
                     elif self.buttons[self.BUTTON_QUIT_INDEX].is_clicked(event):
                         running = False
             
-            self.on_draw();
-            self.handle_input();
-
+            self.on_draw()
+            self.handle_input()
             pygame.display.flip()
-
             self.dt = self.clock.tick(60) / 1000

@@ -2,12 +2,14 @@ import pygame
 
 class Image:
     def __init__(self, path: str, pos: pygame.Vector2) -> None:
-        self.path = path
-        self.image_surface = pygame.image.load(self.path)
+
+        self.surface = pygame.image.load(path).convert_alpha()
         self.pos = pos
+        
+        self.rect = self.surface.get_rect(topleft=(round(self.pos.x), round(self.pos.y)))
 
     def get_surface(self) -> pygame.Surface:
-        return self.image_surface
-   
-    def get_image_pos(self) -> pygame.Vector2:
-        return self.pos
+        return self.surface
+
+    def get_image_pos(self) -> tuple[int, int]:
+        return self.rect.topleft
