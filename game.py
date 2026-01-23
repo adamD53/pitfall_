@@ -20,6 +20,7 @@ class Game:
     BUTTON_QUIT_INDEX = 1
 
     def __init__(self) -> None:
+        """Inicjalizacja głównej klasy gry, ustawienie okna, zmiennych i zasobów."""
         pygame.init()
         pygame.font.init()
         self.clock = pygame.time.Clock() 
@@ -27,6 +28,7 @@ class Game:
         self.screen_width = 1080
         self.screen_height = 720
         self.screen = pygame.display.set_mode((self.screen_width, self.screen_height))
+        
         self.font = pygame.font.SysFont("Arial", 30, bold=True)
         self.big_font = pygame.font.SysFont("Arial", 60, bold=True)
         
@@ -35,28 +37,29 @@ class Game:
         self.images: list[Image] = []
         self.barrels: list[Barrel] = []
         self.buttons: list[Button] = [] 
-        
- 
         self.ropes: list[Rope] = []
         self.holes: list[Hole] = []
-
         
         self.dt = 0
         self.level = 1
         
+
         self.lives = 3
         self.score = 0
         self.score_timer = 0.0
         self.damage_cooldown = 0.0
 
+
         self.load_images()
         self.load_buttons()
         self.play_music("metallica.wav")
         
+
         floor_y_pos = self.floor.get_image_pos()[1]
         self.player = Player(50, floor_y_pos - 100, floor_y_pos)
 
     def start_new_game(self):
+        """Resetuje wszystkie statystyki i zaczyna grę od poziomu 1."""
         self.level = 1
         self.lives = 3
         self.score = 0
@@ -66,7 +69,7 @@ class Game:
         self.play_music("background.wav")
 
     def save_score_to_file(self):
-        """Zapisuje wynik i datę do pliku tekstowego"""
+        """Zapisuje wynik, datę i poziom do pliku wyniki.txt """
         try:
             now = datetime.now()
             date_string = now.strftime("%Y-%m-%d %H:%M:%S")
@@ -79,89 +82,104 @@ class Game:
             print(f"Błąd zapisu pliku: {e}")
 
     def setup_level(self):
-        """Generuje poziom - proceduralnie lub według scenariusza"""
-
+        """
+        Proceduralne generowanie poziomu.
+        """
+ 
         self.barrels.clear()
         self.holes.clear()
         self.ropes.clear()
+        self.player.holes = self.holes 
         
 
-        self.player.holes = self.holes
-        
         floor_y_pos = self.floor.get_image_pos()[1]
         self.player.pos.x = 50
         self.player.pos.y = floor_y_pos - 100
         self.player.velocity = pygame.Vector2(0, 0)
         self.player.is_swinging = False
 
-        print(f"Generowanie poziomu: {self.level}")
+        print(f"Generowanie losowego poziomu: {self.level}")
 
-        if self.level == 1:
-            self.add_rope(self.screen_width // 2)
-            self.spawn_barrel(count=1)
+        scenarios = ["barrels", "holes", "mixed", "speed"]
+        scenario = random.choice(scenarios)
+        
 
-        elif self.level == 2:
-            self.add_rope(self.screen_width // 2)
-            self.spawn_barrel(count=3, interval=350)
+        difficulty = min(self.level, 8) 
 
-        elif self.level == 3:
-            hole_x = (self.screen_width // 2) - 50
+        if scenario == "barrels":
+            print(f"Typ poziomu: Deszcz Beczek (Trudność: {difficulty})")
+
+            self.add_rope(random.randint(300, 800))
+            
+
+            count = random.randint(3, 3 + int(difficulty/2))
+            interval = random.randint(250, 450)
+            self.spawn_barrel(count=count, interval=interval)
+
+        elif scenario == "holes":
+            print(f"Typ poziomu: Dziurawy Ser (Trudność: {difficulty})")
+
+            num_holes = random.choice([2, 3])
+            positions = sorted(random.sample(range(300, 900), num_holes))
+            
+            for x in positions:
+
+                self.add_hole(x)
+                self.add_rope(x + random.randint(20, 80))
+
+            self.spawn_barrel(count=1, interval=0)
+
+        elif scenario == "mixed":
+            print(f"Typ poziomu: Mieszany (Trudność: {difficulty})")
+
+            
+
+            hole_x = random.randint(400, 700)
             self.add_hole(hole_x)
+            self.add_rope(hole_x + 50)
+            
+            count = random.randint(2, 4)
+            self.spawn_barrel(count=count, interval=350)
+
+        elif scenario == "speed":
+            print(f"Typ poziomu: Szybkie Beczki (Trudność: {difficulty})")
+            
             self.add_rope(self.screen_width // 2)
             
+            barrel_y = floor_y_pos - 55
+            for i in range(random.randint(2, 4)):
+                bx = self.screen_width + 100 + (i * 400)
+                b = Barrel(bx, barrel_y)
+                speed_mod = 100 + (difficulty * 20)
+                b.velocity.x = -350 - speed_mod 
+                self.barrels.append(b)
 
-            barrel = Barrel(self.screen_width - 200, floor_y_pos - 55)
-            barrel.velocity = pygame.Vector2(0, 0)
-            self.barrels.append(barrel)
-
-        else:
-            scenario = random.choice(["barrels", "holes", "parkour"])
-            
-            if scenario == "barrels":
-                print("Scenariusz: Deszcz Beczek")
-                self.add_rope(self.screen_width // 2)
-                count = random.randint(4, 5)
-                self.spawn_barrel(count=count, interval=250)
-            
-            elif scenario == "holes":
-                print("Scenariusz: Szwajcarski Ser")
-                x1 = random.randint(300, 500)
-                x2 = random.randint(700, 900)
-                self.add_hole(x1)
-                self.add_hole(x2)
-
-                self.add_rope(x1 + 50)
-                self.add_rope(x2 + 50)
-                self.spawn_barrel(count=2, interval=400)
-
-            elif scenario == "parkour":
-                print("Scenariusz: Parkour")
-                self.add_hole(400)
-                self.add_hole(800)
-                self.add_rope(450)
-                self.add_rope(850)
-                
-                barrel = Barrel(self.screen_width + 100, floor_y_pos - 55)
-                barrel.velocity.x = -450 
-                self.barrels.append(barrel)
-
+    
     def add_rope(self, x):
+        """Dodaje linę w podanej pozycji X."""
         floor_y = self.floor.get_image_pos()[1]
-        length = floor_y - 150
+        length = floor_y - 200
         self.ropes.append(Rope(x, 0, length))
 
     def add_hole(self, x):
+        """Dodaje dziurę w podanej pozycji X."""
         floor_y = self.floor.get_image_pos()[1]
+        for h in self.holes:
+            if abs(h.rect.x - x) < 100:
+                return 
         self.holes.append(Hole(x, floor_y))
 
     def spawn_barrel(self, count=1, interval=0):
+        """Generuje serię beczek."""
         floor_y = self.floor.get_image_pos()[1]
         barrel_y = floor_y - 55
         for i in range(count):
             start_x = self.screen_width + 50 + (i * interval)
-            self.barrels.append(Barrel(start_x, barrel_y))
+            random_offset = random.randint(0, 50)
+            self.barrels.append(Barrel(start_x + random_offset, barrel_y))
 
     def load_images(self) -> None:
+        """Ładuje grafiki tła i podłogi."""
         background_path = os.path.join("Sprites", "Background.png")
         self.background = Image(background_path, pygame.Vector2(0, 0))
         floor_path = os.path.join("Sprites", "Environment", "Floor.png")
@@ -170,6 +188,7 @@ class Game:
         self.images.append(self.floor)
 
     def load_buttons(self) -> None:
+        """Tworzy przyciski menu."""
         center_x = self.screen_width // 2
         path_prefix = os.path.join("Sprites", "Menu")
         btn_play = Button(center_x - 100, 300, 
@@ -182,6 +201,7 @@ class Game:
         self.buttons.append(btn_quit)   
 
     def draw_hud(self):
+        """Rysuje interfejs użytkownika (punkty, życia, poziom)."""
         score_text = self.font.render(f"Wynik: {self.score}", True, (255, 255, 255))
         lives_text = self.font.render(f"Życia: {self.lives}", True, (255, 50, 50))
         level_text = self.font.render(f"Poziom: {self.level}", True, (200, 200, 255))
@@ -191,6 +211,7 @@ class Game:
         self.screen.blit(level_text, (20, 90))
 
     def draw_game_over(self):
+        """Rysuje ekran końca gry."""
         overlay = pygame.Surface((self.screen_width, self.screen_height))
         overlay.set_alpha(180)
         overlay.fill((0, 0, 0))
@@ -212,9 +233,11 @@ class Game:
         self.screen.blit(saved_text, sv_rect)
 
     def on_draw(self) -> None:
+        """Główna pętla rysowania."""
         self.screen.fill((0, 0, 0)) 
 
         if self.game_state == GameState.GAME or self.game_state == GameState.GAME_OVER:
+
             for image in self.images:
                 self.screen.blit(image.get_surface(), image.get_image_pos())
             
@@ -228,9 +251,11 @@ class Game:
                 barrel.draw(self.screen)
 
             if self.game_state == GameState.GAME:
+
                 if self.damage_cooldown <= 0 or (self.damage_cooldown * 10) % 2 > 1:
                     self.player.draw(self.screen)
                 self.draw_hud()
+            
             elif self.game_state == GameState.GAME_OVER:
                 self.draw_game_over()
         
@@ -243,6 +268,7 @@ class Game:
                 btn.draw(self.screen)
 
     def handle_input(self) -> None:
+       """Obsługa logiki gry i wejścia użytkownika."""
        keys = pygame.key.get_pressed()
 
        if self.game_state == GameState.GAME_OVER:
@@ -280,43 +306,44 @@ class Game:
                 self.player.pos.x = rope_x - (self.player.rect.width / 2)
                 self.player.pos.y = rope_y
             
-            
             if not self.player.is_swinging:
                 self.current_rope = None
 
             self.player.speed = 300 
             for barrel in self.barrels:
                 barrel.update(self.dt)
+                
+
                 if self.player.rect.colliderect(barrel.rect):
                     self.player.speed = 100
                     if self.damage_cooldown <= 0:
                         self.score -= 5
                         self.damage_cooldown = 1.0
                 
-                
+
                 if barrel.velocity.x < 0: 
                     if barrel.pos.x < -100:
                         max_x = max([b.pos.x for b in self.barrels]) if self.barrels else 0
-                        new_x = max(max_x + 350, self.screen_width + 50)
+                        new_x = max(max_x + random.randint(300, 500), self.screen_width + 50)
                         barrel.pos.x = new_x
 
             self.player.update(self.dt)
             
-            
             if self.player.pos.y > self.screen_height:
                 self.lives -= 1
                 if self.lives > 0:
+                    print("Strata życia - restart poziomu")
                     self.setup_level()
                 else:
-                    self.save_score_to_file() 
+                    print("Game Over")
+                    self.save_score_to_file()
                     self.game_state = GameState.GAME_OVER
                     self.play_music("metallica.wav")
 
-            
             if self.player.pos.x > self.screen_width:
                 self.level += 1
                 self.score += 50 
-                self.setup_level()
+                self.setup_level() 
 
             if keys[pygame.K_ESCAPE]:
                 self.game_state = GameState.MENU
@@ -333,6 +360,7 @@ class Game:
             print(f"Błąd muzyki: {e}")
 
     def run(self) -> None:
+        """Główna pętla programu."""
         running = True
         while running:
             for event in pygame.event.get():
