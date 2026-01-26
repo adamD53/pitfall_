@@ -6,7 +6,6 @@ class Hole(Image):
     def __init__(self, x: float, y: float) -> None:
 
         path_prefix = os.path.join("Sprites", "Environment", "Pit")
-        
 
         path1 = os.path.join(path_prefix, "1.png")
         
@@ -14,7 +13,6 @@ class Hole(Image):
 
         self.textures = []
         self.load_textures(path_prefix)
-
 
         self.animation_timer = 0
         self.current_frame_index = 0
@@ -29,7 +27,6 @@ class Hole(Image):
                 self.textures.append(texture)
             except FileNotFoundError:
                 print(f"Błąd: Nie znaleziono grafiki dziury: {path}")
-        
 
         if not self.textures:
             self.textures.append(self.surface)
@@ -39,7 +36,6 @@ class Hole(Image):
         if self.animation_timer >= self.animation_speed:
             self.animation_timer = 0
             
-
             self.current_frame_index = (self.current_frame_index + 1) % len(self.textures)
 
             self.surface = self.textures[self.current_frame_index]

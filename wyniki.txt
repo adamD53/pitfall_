@@ -4,3 +4,6 @@ Data: 2026-01-23 15:42:07 | Wynik: 510 pkt | Poziom: 5
 Data: 2026-01-23 16:24:31 | Wynik: 505 pkt | Poziom: 5
 Data: 2026-01-23 16:27:32 | Wynik: 1265 pkt | Poziom: 12
 Data: 2026-01-23 16:32:55 | Wynik: 2055 pkt | Poziom: 17
+Data: 2026-01-26 17:33:44 | Wynik: 695 pkt | Poziom: 6
+Data: 2026-01-26 17:36:16 | Wynik: 1175 pkt | Poziom: 4
+Data: 2026-01-26 18:03:38 | Wynik: 420 pkt | Poziom: 4

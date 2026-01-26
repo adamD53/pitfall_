@@ -18,7 +18,6 @@ class Rope:
         
         self.rect = pygame.Rect(x - 10, y + length - 10, 20, 20)
 
-
         self.segment_surface = self.create_rope_texture()
         self.segment_height = self.segment_surface.get_height()
 

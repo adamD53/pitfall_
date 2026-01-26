@@ -27,8 +27,6 @@ class Barrel(Image):
 
     def update(self, dt: float) -> None:
         self.pos.x += self.velocity.x * dt
-        
-
         self.animation_timer += dt
         if self.animation_timer >= self.animation_speed:
             self.animation_timer = 0
@@ -37,9 +35,7 @@ class Barrel(Image):
 
             self.surface = self.textures[self.current_frame_index]
 
-
         self.rect.topleft = (round(self.pos.x), round(self.pos.y))
-
 
     def draw(self, screen: pygame.Surface) -> None:
         screen.blit(self.surface, self.rect)

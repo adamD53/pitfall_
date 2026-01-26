@@ -42,18 +42,15 @@ class Game:
         
         self.dt = 0
         self.level = 1
-        
 
         self.lives = 3
         self.score = 0
         self.score_timer = 0.0
         self.damage_cooldown = 0.0
 
-
         self.load_images()
         self.load_buttons()
         self.play_music("metallica.wav")
-        
 
         floor_y_pos = self.floor.get_image_pos()[1]
         self.player = Player(50, floor_y_pos - 100, floor_y_pos)
@@ -82,16 +79,12 @@ class Game:
             print(f"Błąd zapisu pliku: {e}")
 
     def setup_level(self):
-        """
-        Proceduralne generowanie poziomu.
-        """
- 
+        """Proceduralne generowanie poziomu. """
         self.barrels.clear()
         self.holes.clear()
         self.ropes.clear()
         self.player.holes = self.holes 
         
-
         floor_y_pos = self.floor.get_image_pos()[1]
         self.player.pos.x = 50
         self.player.pos.y = floor_y_pos - 100
@@ -102,7 +95,6 @@ class Game:
 
         scenarios = ["barrels", "holes", "mixed", "speed"]
         scenario = random.choice(scenarios)
-        
 
         difficulty = min(self.level, 8) 
 
@@ -111,7 +103,6 @@ class Game:
 
             self.add_rope(random.randint(300, 800))
             
-
             count = random.randint(3, 3 + int(difficulty/2))
             interval = random.randint(250, 450)
             self.spawn_barrel(count=count, interval=interval)
@@ -123,7 +114,6 @@ class Game:
             positions = sorted(random.sample(range(300, 900), num_holes))
             
             for x in positions:
-
                 self.add_hole(x)
                 self.add_rope(x + random.randint(20, 80))
 
@@ -131,8 +121,6 @@ class Game:
 
         elif scenario == "mixed":
             print(f"Typ poziomu: Mieszany (Trudność: {difficulty})")
-
-            
 
             hole_x = random.randint(400, 700)
             self.add_hole(hole_x)
@@ -237,7 +225,6 @@ class Game:
         self.screen.fill((0, 0, 0)) 
 
         if self.game_state == GameState.GAME or self.game_state == GameState.GAME_OVER:
-
             for image in self.images:
                 self.screen.blit(image.get_surface(), image.get_image_pos())
             
@@ -282,7 +269,7 @@ class Game:
 
        if self.game_state == GameState.GAME:
             self.score_timer += self.dt
-            if self.score_timer >= 1.0:
+            if self.score_timer >= 1.0 and self.player.velocity != pygame.Vector2(0, 0):
                 self.score += 10
                 self.score_timer = 0
             
@@ -312,14 +299,12 @@ class Game:
             self.player.speed = 300 
             for barrel in self.barrels:
                 barrel.update(self.dt)
-                
 
                 if self.player.rect.colliderect(barrel.rect):
                     self.player.speed = 100
                     if self.damage_cooldown <= 0:
-                        self.score -= 5
+                        self.score -= 10
                         self.damage_cooldown = 1.0
-                
 
                 if barrel.velocity.x < 0: 
                     if barrel.pos.x < -100:

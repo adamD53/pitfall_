@@ -81,7 +81,6 @@ class Player(Image):
 
         is_over_hole = False
         
-
         player_center_x = self.pos.x + (self.surface.get_width() / 2)
         
         for hole in self.holes:
@@ -123,7 +122,6 @@ class Player(Image):
         
         self.velocity.x = 0
         
-
         if self.pos.y > self.ground_y - 20 and not self.on_ground:
              pass 
 

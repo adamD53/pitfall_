@@ -2,7 +2,6 @@ import pygame
 
 class Image:
     def __init__(self, path: str, pos: pygame.Vector2) -> None:
-
         self.surface = pygame.image.load(path).convert_alpha()
         self.pos = pos
         
